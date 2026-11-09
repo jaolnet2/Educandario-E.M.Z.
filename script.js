@@ -1,6 +1,6 @@
 /**
  * Sistema de Gestão Escolar - Educandário Espírita Mãe Zeferina
- * Controle de Login, Navegação entre Abas, Matrículas e Emissão de Documentos A4
+ * Lógica SPA: Navegação, Alunos, Matrículas e Documentos A4
  */
 
 const ALUNOS_PADRAO = [
@@ -13,29 +13,26 @@ const ALUNOS_PADRAO = [
 
 let turmaFiltroAtual = 'TODAS';
 
-// Garante que sempre exista uma lista válida de alunos carregada
 function obterAlunos() {
     try {
-        const salvos = localStorage.getItem('alunosEducandario_v2');
+        const salvos = localStorage.getItem('alunosEducandario_v3');
         if (salvos) {
             const parsed = JSON.parse(salvos);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                return parsed;
-            }
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
         }
     } catch (e) {
-        console.error("Erro ao ler localStorage, restaurando padrão:", e);
+        console.error("Erro ao carregar localStorage:", e);
     }
-    localStorage.setItem('alunosEducandario_v2', JSON.stringify(ALUNOS_PADRAO));
+    localStorage.setItem('alunosEducandario_v3', JSON.stringify(ALUNOS_PADRAO));
     return ALUNOS_PADRAO;
 }
 
 function salvarListaAlunos(lista) {
-    localStorage.setItem('alunosEducandario_v2', JSON.stringify(lista));
+    localStorage.setItem('alunosEducandario_v3', JSON.stringify(lista));
 }
 
 // ==========================================
-// 1. FUNÇÕES DA TELA DE LOGIN (index.html)
+// 1. LOGIN
 // ==========================================
 function selecionarPerfil(perfilEscolhido) {
     const botoesAbas = document.querySelectorAll('#perfilTabs button');
@@ -58,7 +55,7 @@ function realizarLogin(evento) {
 }
 
 // ==========================================
-// 2. NAVEGAÇÃO ENTRE ABAS NO DASHBOARD
+// 2. NAVEGAÇÃO SPA (ABAS DO MENU)
 // ==========================================
 function navegarPara(abaId) {
     const secoes = ['visao-geral', 'alunos-turmas', 'documentos', 'chamada'];
@@ -80,46 +77,40 @@ function navegarPara(abaId) {
         ativaNav.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 text-left font-semibold transition-all";
     }
 
-    // Sempre que abrir a aba de documentos, gera a folha A4 imediatamente
     if (abaId === 'documentos') {
         atualizarPreviewDocumento();
     }
 }
 
 // ==========================================
-// 3. RENDERIZAÇÃO DE ALUNOS E SELECTS
+// 3. RENDERIZAÇÃO DOS DADOS NA TELA
 // ==========================================
 function renderizarSistema() {
     const alunos = obterAlunos();
     const inputBusca = document.getElementById('buscaGlobalInput');
     const termoBusca = (inputBusca ? inputBusca.value : '').toLowerCase();
 
-    // Atualiza KPI de total de alunos (101 base + alunos na lista)
+    // Contador de alunos (101 base + cadastrados)
     const kpiTotal = document.getElementById('kpiTotalAlunos');
     if (kpiTotal) kpiTotal.innerText = 101 + alunos.length;
 
-    // Preenche Tabela Resumo na Visão Geral
+    // Tabela Visão Geral
     const tbodyResumo = document.getElementById('tabelaResumoAlunos');
     if (tbodyResumo) {
         tbodyResumo.innerHTML = alunos.slice(0, 5).map(a => `
             <tr class="hover:bg-slate-50/80">
-                <td class="py-3 font-medium text-slate-900">
-                    ${a.nome}
-                    <span class="block text-[10px] text-slate-400 font-normal">Matrícula ${a.matricula}</span>
-                </td>
+                <td class="py-3 font-medium text-slate-900">${a.nome}<span class="block text-[10px] text-slate-400 font-normal">Matrícula ${a.matricula}</span></td>
                 <td class="py-3">${a.turma}</td>
-                <td class="py-3">
-                    <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium text-[10px]">${a.status}</span>
-                </td>
+                <td class="py-3"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium text-[10px]">${a.status}</span></td>
                 <td class="py-3 text-right space-x-1">
-                    <button onclick="abrirDocDireto(${a.id}, 'historico')" class="px-2.5 py-1 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100">Histórico</button>
-                    <button onclick="abrirDocDireto(${a.id}, 'escolaridade')" class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100">Emitir Atestado</button>
+                    <button onclick="abrirDocDireto(${a.id}, 'historico')" class="px-2.5 py-1 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 cursor-pointer">Histórico</button>
+                    <button onclick="abrirDocDireto(${a.id}, 'escolaridade')" class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 cursor-pointer">Emitir Atestado</button>
                 </td>
             </tr>
         `).join('');
     }
 
-    // Preenche Tabela Completa na aba Alunos & Turmas
+    // Tabela Completa Alunos & Turmas
     const tbodyCompleta = document.getElementById('tabelaCompletaAlunos');
     if (tbodyCompleta) {
         const filtrados = alunos.filter(a => {
@@ -130,32 +121,28 @@ function renderizarSistema() {
 
         tbodyCompleta.innerHTML = filtrados.map(a => `
             <tr class="hover:bg-slate-50/80">
-                <td class="py-3.5 font-semibold text-slate-900">
-                    ${a.nome}
-                    <span class="block text-[10px] text-slate-400 font-normal">Matrícula ${a.matricula}</span>
-                </td>
+                <td class="py-3.5 font-semibold text-slate-900">${a.nome}<span class="block text-[10px] text-slate-400 font-normal">Matrícula ${a.matricula}</span></td>
                 <td class="py-3.5">${a.nascimento}</td>
                 <td class="py-3.5"><span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium">${a.turma}</span></td>
                 <td class="py-3.5">${a.responsavel}</td>
                 <td class="py-3.5"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium text-[10px]">${a.status}</span></td>
                 <td class="py-3.5 text-right space-x-1">
-                    <button onclick="abrirDocDireto(${a.id}, 'escolaridade')" class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100">Atestado</button>
-                    <button onclick="abrirDocDireto(${a.id}, 'transferencia')" class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg font-medium hover:bg-amber-100">Transferência</button>
-                    <button onclick="abrirDocDireto(${a.id}, 'historico')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-medium hover:bg-emerald-100">Histórico</button>
+                    <button onclick="abrirDocDireto(${a.id}, 'escolaridade')" class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 cursor-pointer">Atestado</button>
+                    <button onclick="abrirDocDireto(${a.id}, 'transferencia')" class="px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg font-medium hover:bg-amber-100 cursor-pointer">Transferência</button>
+                    <button onclick="abrirDocDireto(${a.id}, 'historico')" class="px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-medium hover:bg-emerald-100 cursor-pointer">Histórico</button>
                 </td>
             </tr>
         `).join('');
     }
 
-    // Preenche os Selects de escolha de aluno (Card Rápido e Aba Documentos)
+    // Preenche Selects
     const selectRapido = document.getElementById('selectAlunoRapido');
     const selectDoc = document.getElementById('docSelectAluno');
     const opcoesHtml = alunos.map(a => `<option value="${a.id}">${a.nome} (${a.turma})</option>`).join('');
-    
     if (selectRapido) selectRapido.innerHTML = opcoesHtml;
     if (selectDoc) selectDoc.innerHTML = opcoesHtml;
 
-    // Preenche a Chamada Diária
+    // Chamada Diária
     const containerChamada = document.getElementById('listaChamadaContainer');
     if (containerChamada) {
         containerChamada.innerHTML = alunos.map(a => `
@@ -246,7 +233,7 @@ function salvarNovoAluno(event) {
 }
 
 // ==========================================
-// 5. ABA EMISSÃO DE DOCUMENTOS (GERADOR A4)
+// 5. EMISSÃO DE DOCUMENTOS OFICIAIS (A4)
 // ==========================================
 function abrirDocDireto(alunoId, tipoDoc) {
     navegarPara('documentos');
@@ -259,7 +246,8 @@ function abrirDocDireto(alunoId, tipoDoc) {
 
 function atalhoEmitirDoc(tipoDoc) {
     const selectRapido = document.getElementById('selectAlunoRapido');
-    const alunoId = selectRapido ? selectRapido.value : obterAlunos()[0].id;
+    const alunos = obterAlunos();
+    const alunoId = selectRapido ? selectRapido.value : alunos[0].id;
     abrirDocDireto(alunoId, tipoDoc);
 }
 
@@ -272,7 +260,6 @@ function atualizarPreviewDocumento() {
     const tipo = selectTipo ? selectTipo.value : 'escolaridade';
     const aluno = alunos.find(a => String(a.id) === String(alunoId)) || alunos[0];
 
-    // Exibe ou esconde a caixa de Parecer Descritivo dependendo se for Histórico
     const containerParecer = document.getElementById('campoParecerContainer');
     if (containerParecer) {
         if (tipo === 'historico') containerParecer.classList.remove('hidden');
@@ -353,9 +340,9 @@ function atualizarPreviewDocumento() {
     if (folha) {
         folha.innerHTML = `
             <div>
-                <!-- Cabeçalho Timbrado Oficial -->
+                <!-- Timbre Oficial -->
                 <div class="flex items-center space-x-4 border-b-2 border-blue-800 pb-4 mb-8">
-                    <img src="logo-maezeferina.jpg" onerror="this.src='logoeducandarioEMZ.jpg'" class="w-16 h-16 object-contain">
+                    <img src="logoeducandarioEMZ.jpg" class="w-16 h-16 object-contain">
                     <div>
                         <h2 class="text-base font-bold text-blue-900 uppercase">Educandário Espírita Mãe Zeferina</h2>
                         <p class="text-[11px] text-slate-600">Instituição Filantrópica • Educação Infantil ao Ensino Fundamental I</p>
@@ -363,14 +350,14 @@ function atualizarPreviewDocumento() {
                     </div>
                 </div>
 
-                <!-- Título do Documento -->
+                <!-- Título -->
                 <h3 class="text-center text-sm font-bold tracking-wide text-slate-900 underline mb-8">${tituloDoc}</h3>
 
-                <!-- Corpo Dinâmico -->
+                <!-- Corpo -->
                 ${corpoHtml}
             </div>
 
-            <!-- Assinatura da Diretoria -->
+            <!-- Assinatura -->
             <div class="mt-12 pt-6 text-center text-xs">
                 <p class="text-right mb-12">Cuiabá - MT, ${dataHoje}.</p>
                 <div class="w-64 mx-auto border-t border-slate-400 pt-2">
@@ -393,7 +380,7 @@ function salvarChamadaSimulada() {
     alert("Chamada diária registrada com sucesso no sistema!");
 }
 
-// Inicialização imediata ao carregar a página
+// Inicialização automática ao carregar a página no navegador
 document.addEventListener('DOMContentLoaded', () => {
     renderizarSistema();
     atualizarPreviewDocumento();
