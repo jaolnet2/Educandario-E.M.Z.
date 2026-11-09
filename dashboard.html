@@ -13,16 +13,14 @@
     <!-- BARRA LATERAL (SIDEBAR) -->
     <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex">
         <div>
-            <!-- Logo -->
-            <div class="p-6 border-b border-slate-100">
-                <div class="flex items-center space-x-3">
-                    <div class="w-9 h-9 bg-blue-600 text-white rounded-lg flex items-center justify-center font-bold text-base shadow-sm">
-                        M
-                    </div>
-                    <div>
-                        <span class="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Educandário</span>
-                        <span class="block text-sm font-bold text-slate-800 leading-tight">Mãe Zeferina</span>
-                    </div>
+            <!-- Logo Oficial na Sidebar -->
+            <div class="p-5 border-b border-slate-100 flex items-center space-x-3">
+                <div class="w-10 h-10 bg-blue-50 rounded-xl p-1 border border-blue-100 flex-shrink-0">
+                    <img src="logo-maezeferina.jpg" alt="Logo" class="w-full h-full object-contain rounded-lg">
+                </div>
+                <div>
+                    <span class="block text-[10px] font-bold text-blue-600 uppercase tracking-wider">Educandário</span>
+                    <span class="block text-xs font-bold text-slate-800 leading-tight">Mãe Zeferina</span>
                 </div>
             </div>
 
@@ -49,11 +47,17 @@
             </nav>
         </div>
 
-        <!-- Rodapé da Sidebar (Sem a frase antiga, perfil da Diretora Neide) -->
+        <!-- Rodapé da Sidebar (Redes Sociais e Perfil da Diretora Neide) -->
         <div class="p-4 border-t border-slate-100 space-y-3">
-            <a href="#" class="flex items-center space-x-2 text-xs text-slate-500 hover:text-slate-800 px-3 py-1">
-                <span>❓</span><span>Central de ajuda</span>
-            </a>
+            <div class="flex items-center justify-around text-xs text-slate-500 py-1">
+                <a href="https://www.instagram.com/educandarioespiritamaezeferina/" target="_blank" class="hover:text-pink-600 font-medium flex items-center space-x-1">
+                    <span>📷</span><span>Instagram</span>
+                </a>
+                <a href="https://api.whatsapp.com/message/7WTHP3SMPLZRP1" target="_blank" class="hover:text-emerald-600 font-medium flex items-center space-x-1">
+                    <span>💬</span><span>WhatsApp</span>
+                </a>
+            </div>
+
             <div class="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100">
                 <div class="flex items-center space-x-2">
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs">
@@ -64,7 +68,7 @@
                         <span class="block text-[10px] text-slate-500">Diretoria</span>
                     </div>
                 </div>
-                <a href="index.html" class="text-slate-400 hover:text-red-600 text-xs">Sair</a>
+                <a href="index.html" class="text-slate-400 hover:text-red-600 text-xs" title="Sair do sistema">Sair</a>
             </div>
         </div>
     </aside>
@@ -75,7 +79,7 @@
         <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between">
             <div>
                 <h1 class="text-xl font-bold text-slate-900">Bom dia, Neide</h1>
-                <p class="text-xs text-slate-500">Bem-vinda ao seu espaço de gestão.</p>
+                <p class="text-xs text-slate-500">Educandário Espírita Mãe Zeferina • Gestão Acadêmica</p>
             </div>
             <div class="flex items-center space-x-4">
                 <input type="text" placeholder="Buscar aluno por nome ou matrícula..." class="w-72 px-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600/20">
@@ -90,7 +94,7 @@
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <span class="text-xs font-medium text-slate-500">Alunos Atendidos</span>
                     <div class="text-2xl font-bold text-slate-900 mt-1">106</div>
-                    <span class="text-[11px] text-emerald-600 font-medium">✓ 100% Ativos</span>
+                    <span class="text-[11px] text-emerald-600 font-medium">✓ Educação Infantil ao Fundamental I</span>
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <span class="text-xs font-medium text-slate-500">Frequência Hoje</span>
@@ -111,7 +115,7 @@
 
             <!-- Grid Inferior: Tabela de Alunos sem fotos + Emissão de PDFs -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Tabela de Alunos (SEM FOTOS) -->
+                <!-- Tabela de Alunos -->
                 <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                     <h2 class="text-sm font-bold text-slate-900 mb-4">Acesso Rápido aos Alunos</h2>
                     <div class="overflow-x-auto">
@@ -185,7 +189,7 @@
                         </div>
                     </div>
                     <div class="mt-4 pt-3 border-t border-blue-200/50 text-[10px] text-slate-400 text-center">
-                        PDF com os dados oficiais do Educandário Mãe Zeferina.
+                        Rua Cabriúva, nº 14, Parque Geórgia • Tel: (65) 3044-4557
                     </div>
                 </div>
             </div>
