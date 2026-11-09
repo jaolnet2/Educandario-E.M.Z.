@@ -5,18 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel de Gestão - Educandário Espírita Mãe Zeferina</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; }
+        /* Estilo especial para quando clicar em Imprimir/Salvar PDF sair apenas a folha A4 limpa */
+        @media print {
+            body * { visibility: hidden; }
+            #areaImpressaoDocumento, #areaImpressaoDocumento * { visibility: visible; }
+            #areaImpressaoDocumento {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                box-shadow: none !important;
+                border: none !important;
+            }
+        }
+    </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex">
 
     <!-- BARRA LATERAL (SIDEBAR) -->
     <aside class="w-64 bg-white border-r border-slate-200 flex flex-col justify-between hidden md:flex">
         <div>
-            <!-- Logo Oficial na Sidebar -->
+            <!-- Logo Oficial -->
             <div class="p-5 border-b border-slate-100 flex items-center space-x-3">
                 <div class="w-10 h-10 bg-blue-50 rounded-xl p-1 border border-blue-100 flex-shrink-0">
-                    <img src="logo-maezeferina.jpg" alt="Logo" class="w-full h-full object-contain rounded-lg">
+                    <img src="logo-maezeferina.jpg" onerror="this.src='logoeducandarioEMZ.jpg'" alt="Logo" class="w-full h-full object-contain rounded-lg">
                 </div>
                 <div>
                     <span class="block text-[10px] font-bold text-blue-600 uppercase tracking-wider">Educandário</span>
@@ -24,30 +39,24 @@
                 </div>
             </div>
 
-            <!-- Menu -->
+            <!-- Menu de Navegação Unificado -->
             <nav class="p-4 space-y-1 text-sm font-medium">
-                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600">
+                <button onclick="navegarPara('visao-geral')" id="nav-visao-geral" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 text-left transition-all">
                     <span>📊</span><span>Visão Geral</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50">
-                    <span>👶</span><span>Alunos (106)</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50">
-                    <span>🏫</span><span>Turmas</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50">
-                    <span>📅</span><span>Chamada Diária</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50">
-                    <span>📝</span><span>Pareceres & Notas</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50">
+                </button>
+                <button onclick="navegarPara('alunos-turmas')" id="nav-alunos-turmas" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-left transition-all">
+                    <span>🏫</span><span>Alunos & Turmas</span>
+                </button>
+                <button onclick="navegarPara('documentos')" id="nav-documentos" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-left transition-all">
                     <span>📄</span><span>Emissão de Documentos</span>
-                </a>
+                </button>
+                <button onclick="navegarPara('chamada')" id="nav-chamada" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-left transition-all">
+                    <span>📅</span><span>Chamada Diária</span>
+                </button>
             </nav>
         </div>
 
-        <!-- Rodapé da Sidebar (Redes Sociais e Perfil da Diretora Neide) -->
+        <!-- Rodapé da Sidebar -->
         <div class="p-4 border-t border-slate-100 space-y-3">
             <div class="flex items-center justify-around text-xs text-slate-500 py-1">
                 <a href="https://www.instagram.com/educandarioespiritamaezeferina/" target="_blank" class="hover:text-pink-600 font-medium flex items-center space-x-1">
@@ -82,19 +91,20 @@
                 <p class="text-xs text-slate-500">Educandário Espírita Mãe Zeferina • Gestão Acadêmica</p>
             </div>
             <div class="flex items-center space-x-4">
-                <input type="text" placeholder="Buscar aluno por nome ou matrícula..." class="w-72 px-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600/20">
-                <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm">+ Nova Matrícula</a>
+                <input type="text" id="buscaGlobalInput" oninput="filtrarTabelaAlunos()" placeholder="Buscar aluno por nome ou matrícula..." class="w-72 px-4 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-blue-600/20">
+                <button onclick="abrirModalMatricula()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-sm transition-all">
+                    + Nova Matrícula
+                </button>
             </div>
         </header>
 
-        <!-- Corpo da Visão Geral -->
-        <div class="p-8 space-y-6">
-            <!-- Cards de Indicadores -->
+        <!-- SEÇÃO 1: VISÃO GERAL -->
+        <section id="sec-visao-geral" class="p-8 space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <span class="text-xs font-medium text-slate-500">Alunos Atendidos</span>
-                    <div class="text-2xl font-bold text-slate-900 mt-1">106</div>
-                    <span class="text-[11px] text-emerald-600 font-medium">✓ Educação Infantil ao Fundamental I</span>
+                    <div class="text-2xl font-bold text-slate-900 mt-1" id="kpiTotalAlunos">106</div>
+                    <span class="text-[11px] text-emerald-600 font-medium">✓ Educação Infantil ao Fund. I</span>
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <span class="text-xs font-medium text-slate-500">Frequência Hoje</span>
@@ -104,87 +114,59 @@
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <span class="text-xs font-medium text-slate-500">Equipe & Estagiários</span>
                     <div class="text-2xl font-bold text-slate-900 mt-1">15</div>
-                    <span class="text-[11px] text-slate-500">Pedagogia, Psicologia e Professores</span>
+                    <span class="text-[11px] text-slate-500">Pedagogia, Psicologia e Profs.</span>
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
                     <span class="text-xs font-medium text-slate-500">Documentos Emitidos</span>
-                    <div class="text-2xl font-bold text-slate-900 mt-1">38</div>
+                    <div class="text-2xl font-bold text-slate-900 mt-1" id="kpiDocsEmitidos">38</div>
                     <span class="text-[11px] text-slate-500">neste mês</span>
                 </div>
             </div>
 
-            <!-- Grid Inferior: Tabela de Alunos sem fotos + Emissão de PDFs -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Tabela de Alunos -->
+                <!-- Acesso Rápido aos Alunos -->
                 <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-                    <h2 class="text-sm font-bold text-slate-900 mb-4">Acesso Rápido aos Alunos</h2>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-sm font-bold text-slate-900">Acesso Rápido aos Alunos</h2>
+                        <button onclick="navegarPara('alunos-turmas')" class="text-xs text-blue-600 hover:underline font-medium">Ver todas as turmas &rarr;</button>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs">
                             <thead>
-                                <tr class="text-slate-400 border-b border-slate-100 pb-2">
+                                <tr class="text-slate-400 border-b border-slate-100">
                                     <th class="pb-3 font-semibold">NOME</th>
                                     <th class="pb-3 font-semibold">SÉRIE / TURMA</th>
                                     <th class="pb-3 font-semibold">STATUS</th>
                                     <th class="pb-3 font-semibold text-right">AÇÕES RÁPIDAS</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-50 text-slate-700">
-                                <tr class="hover:bg-slate-50/50">
-                                    <td class="py-3 font-medium text-slate-900">Ana Clara Santos <span class="block text-[10px] text-slate-400 font-normal">Matrícula 2026 • 001</span></td>
-                                    <td class="py-3">Pré II • A</td>
-                                    <td class="py-3"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium text-[10px]">Ativo</span></td>
-                                    <td class="py-3 text-right space-x-2">
-                                        <button class="px-2.5 py-1 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100">Ver Histórico</button>
-                                        <button class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100">Emitir Atestado</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-slate-50/50">
-                                    <td class="py-3 font-medium text-slate-900">Miguel Oliveira <span class="block text-[10px] text-slate-400 font-normal">Matrícula 2026 • 014</span></td>
-                                    <td class="py-3">Maternal • A</td>
-                                    <td class="py-3"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium text-[10px]">Ativo</span></td>
-                                    <td class="py-3 text-right space-x-2">
-                                        <button class="px-2.5 py-1 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100">Ver Histórico</button>
-                                        <button class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100">Emitir Atestado</button>
-                                    </td>
-                                </tr>
-                                <tr class="hover:bg-slate-50/50">
-                                    <td class="py-3 font-medium text-slate-900">Sofia Almeida <span class="block text-[10px] text-slate-400 font-normal">Matrícula 2026 • 028</span></td>
-                                    <td class="py-3">Pré I • B</td>
-                                    <td class="py-3"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium text-[10px]">Ativo</span></td>
-                                    <td class="py-3 text-right space-x-2">
-                                        <button class="px-2.5 py-1 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100">Ver Histórico</button>
-                                        <button class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100">Emitir Atestado</button>
-                                    </td>
-                                </tr>
+                            <tbody id="tabelaResumoAlunos" class="divide-y divide-slate-50 text-slate-700">
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Emissão Rápida de Documentos (PDF) -->
+                <!-- Atalho Emissão Rápida -->
                 <div class="bg-blue-50/50 rounded-2xl border border-blue-100 p-6 flex flex-col justify-between">
                     <div>
                         <h2 class="text-sm font-bold text-slate-900 mb-1">Emissão Rápida de Documentos</h2>
-                        <p class="text-[11px] text-slate-500 mb-4">Gere atestados e históricos instantaneamente.</p>
+                        <p class="text-[11px] text-slate-500 mb-4">Selecione a criança para gerar o PDF oficial timbrado.</p>
                         
                         <div class="space-y-3">
-                            <select class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-700">
-                                <option>Selecione um aluno...</option>
-                                <option>Ana Clara Santos</option>
-                                <option>Miguel Oliveira</option>
+                            <select id="selectAlunoRapido" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-700">
                             </select>
 
-                            <button class="w-full text-left px-4 py-2.5 bg-white hover:bg-blue-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 flex items-center justify-between shadow-sm">
+                            <button onclick="atalhoEmitirDoc('escolaridade')" class="w-full text-left px-4 py-2.5 bg-white hover:bg-blue-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 flex items-center justify-between shadow-sm transition-all">
                                 <span>📄 Gerar Atestado de Escolaridade</span>
-                                <span class="text-blue-600 font-bold">↓</span>
+                                <span class="text-blue-600 font-bold">&rarr;</span>
                             </button>
-                            <button class="w-full text-left px-4 py-2.5 bg-white hover:bg-blue-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 flex items-center justify-between shadow-sm">
+                            <button onclick="atalhoEmitirDoc('transferencia')" class="w-full text-left px-4 py-2.5 bg-white hover:bg-blue-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 flex items-center justify-between shadow-sm transition-all">
                                 <span>📄 Gerar Atestado de Transferência</span>
-                                <span class="text-blue-600 font-bold">↓</span>
+                                <span class="text-blue-600 font-bold">&rarr;</span>
                             </button>
-                            <button class="w-full text-left px-4 py-2.5 bg-white hover:bg-blue-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 flex items-center justify-between shadow-sm">
+                            <button onclick="atalhoEmitirDoc('historico')" class="w-full text-left px-4 py-2.5 bg-white hover:bg-blue-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 flex items-center justify-between shadow-sm transition-all">
                                 <span>📄 Gerar Histórico e Desenvolvimento</span>
-                                <span class="text-blue-600 font-bold">↓</span>
+                                <span class="text-blue-600 font-bold">&rarr;</span>
                             </button>
                         </div>
                     </div>
@@ -193,8 +175,116 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- SEÇÃO 2: ALUNOS & TURMAS (UNIFICADA) -->
+        <section id="sec-alunos-turmas" class="p-8 space-y-6 hidden">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Gestão Unificada de Alunos & Turmas</h2>
+                    <p class="text-xs text-slate-500">Filtre por série/turma, consulte fichas ou adicione novas matrículas.</p>
+                </div>
+                <div class="flex flex-wrap gap-2" id="filtrosTurma">
+                    <button onclick="selecionarFiltroTurma('TODAS')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white">Todas</button>
+                    <button onclick="selecionarFiltroTurma('Maternal • A')" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">Maternal • A</button>
+                    <button onclick="selecionarFiltroTurma('Pré I • B')" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">Pré I • B</button>
+                    <button onclick="selecionarFiltroTurma('Pré II • A')" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">Pré II • A</button>
+                    <button onclick="selecionarFiltroTurma('1º Ano • A')" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">1º Ano • A</button>
+                    <button onclick="selecionarFiltroTurma('2º Ano • A')" class="px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">2º Ano • A</button>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="text-slate-400 border-b border-slate-100">
+                                <th class="pb-3 font-semibold">MATRÍCULA / NOME</th>
+                                <th class="pb-3 font-semibold">DATA DE NASC.</th>
+                                <th class="pb-3 font-semibold">SÉRIE / TURMA</th>
+                                <th class="pb-3 font-semibold">RESPONSÁVEL</th>
+                                <th class="pb-3 font-semibold">STATUS</th>
+                                <th class="pb-3 font-semibold text-right">DOCUMENTOS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaCompletaAlunos" class="divide-y divide-slate-100 text-slate-700">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO 3: EMISSÃO DE DOCUMENTOS (COM A4) -->
+        <section id="sec-documentos" class="p-8 space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4 h-fit">
+                    <h2 class="text-base font-bold text-slate-900">Gerador de Documentos Oficiais</h2>
+                    <p class="text-xs text-slate-500">Os dados do aluno são preenchidos automaticamente no modelo oficial da escola.</p>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">1. Selecione o Aluno(a)</label>
+                        <select id="docSelectAluno" onchange="atualizarPreviewDocumento()" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800">
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">2. Tipo de Documento</label>
+                        <select id="docSelectTipo" onchange="atualizarPreviewDocumento()" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs bg-white text-slate-800">
+                            <option value="escolaridade">Atestado de Escolaridade</option>
+                            <option value="transferencia">Atestado de Transferência</option>
+                            <option value="historico">Histórico Escolar & Desenvolvimento</option>
+                        </select>
+                    </div>
+
+                    <div id="campoParecerContainer" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Parecer Pedagógico / Psicologia</label>
+                        <textarea id="docInputParecer" oninput="atualizarPreviewDocumento()" rows="3" class="w-full p-2.5 rounded-xl border border-slate-200 text-xs" placeholder="Descreva o desenvolvimento e notas do aluno...">Apresenta excelente desenvolvimento cognitivo e socioemocional, participando ativamente das atividades pedagógicas propostas.</textarea>
+                    </div>
+
+                    <button onclick="imprimirDocumento()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md text-xs flex items-center justify-center space-x-2">
+                        <span>🖨️ Imprimir / Baixar PDF Oficial</span>
+                    </button>
+                </div>
+
+                <!-- Folha A4 de Pré-visualização em Tempo Real -->
+                <div class="lg:col-span-2 flex justify-center">
+                    <div id="areaImpressaoDocumento" class="bg-white w-full max-w-2xl min-h-[680px] p-10 rounded-xl border border-slate-200 shadow-lg flex flex-col justify-between text-slate-800">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO 4: CHAMADA DIÁRIA RÁPIDA -->
+        <section id="sec-chamada" class="p-8 space-y-6 hidden">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-slate-900">Diário de Frequência Rápida</h2>
+                    <p class="text-xs text-slate-500">Marque Presença (P) ou Falta (F) pelos computadores ou celulares dos professores.</p>
+                </div>
+                <button onclick="salvarChamadaSimulada()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow-sm">
+                    ✓ Salvar Chamada do Dia
+                </button>
+            </div>
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div id="listaChamadaContainer" class="divide-y divide-slate-100 text-xs">
+                </div>
+            </div>
+        </section>
     </main>
 
-</body>
-</html>
+    <!-- MODAL: NOVA MATRÍCULA -->
+    <div id="modalNovaMatricula" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+                <h3 class="text-base font-bold text-slate-900">Cadastrar Nova Matrícula</h3>
+                <button onclick="fecharModalMatricula()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <form id="formNovaMatricula" onsubmit="salvarNovoAluno(event)" class="space-y-4 mt-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nome Completo da Criança *</label>
+                    <input type="text" id="novoNome" required placeholder="Ex: Lucas Gabriel Souza" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-600">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
