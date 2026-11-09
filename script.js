@@ -1,11 +1,11 @@
 /**
- * Lógica Completa do Protótipo Funcional - Educandário Espírita Mãe Zeferina
+ * Sistema de Gestão Escolar - Educandário Espírita Mãe Zeferina
+ * Controle de Login, Navegação entre Abas, Matrículas e Emissão de Documentos A4
  */
 
-// Base inicial de alunos para demonstração
-const alunosIniciais = [
+const ALUNOS_PADRAO = [
     { id: 1, matricula: "2026•001", nome: "Ana Clara Santos", nascimento: "14/03/2021", turma: "Pré II • A", responsavel: "Juliana Santos", status: "Ativo", notaMedia: "9,5", frequencia: "98%" },
-    { id: 2, matricula: "2026•014", nome: "Miguel Oliveira", nascimento: "22/07/2023", turma: "Maternal • A", responsavel: "Carlos Oliveira", status: "Ativo", notaMedia: " Conceito A", frequencia: "95%" },
+    { id: 2, matricula: "2026•014", nome: "Miguel Oliveira", nascimento: "22/07/2023", turma: "Maternal • A", responsavel: "Carlos Oliveira", status: "Ativo", notaMedia: "Conceito A", frequencia: "95%" },
     { id: 3, matricula: "2026•028", nome: "Sofia Almeida", nascimento: "09/11/2022", turma: "Pré I • B", responsavel: "Fernanda Almeida", status: "Ativo", notaMedia: "Conceito A", frequencia: "96%" },
     { id: 4, matricula: "2026•042", nome: "Pedro Henrique Lima", nascimento: "02/05/2019", turma: "1º Ano • A", responsavel: "Roberto Lima", status: "Ativo", notaMedia: "8,8", frequencia: "92%" },
     { id: 5, matricula: "2026•057", nome: "Helena Ferreira", nascimento: "18/08/2018", turma: "2º Ano • A", responsavel: "Patrícia Ferreira", status: "Ativo", notaMedia: "9,2", frequencia: "97%" }
@@ -13,22 +13,29 @@ const alunosIniciais = [
 
 let turmaFiltroAtual = 'TODAS';
 
-// Carrega alunos do localStorage ou inicia com a lista padrão
+// Garante que sempre exista uma lista válida de alunos carregada
 function obterAlunos() {
-    const salvos = localStorage.getItem('alunosEducandario');
-    if (salvos) {
-        return JSON.parse(salvos);
+    try {
+        const salvos = localStorage.getItem('alunosEducandario_v2');
+        if (salvos) {
+            const parsed = JSON.parse(salvos);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed;
+            }
+        }
+    } catch (e) {
+        console.error("Erro ao ler localStorage, restaurando padrão:", e);
     }
-    localStorage.setItem('alunosEducandario', JSON.stringify(alunosIniciais));
-    return alunosIniciais;
+    localStorage.setItem('alunosEducandario_v2', JSON.stringify(ALUNOS_PADRAO));
+    return ALUNOS_PADRAO;
 }
 
 function salvarListaAlunos(lista) {
-    localStorage.setItem('alunosEducandario', JSON.stringify(lista));
+    localStorage.setItem('alunosEducandario_v2', JSON.stringify(lista));
 }
 
 // ==========================================
-// 1. AUTENTICAÇÃO E TELA DE LOGIN
+// 1. FUNÇÕES DA TELA DE LOGIN (index.html)
 // ==========================================
 function selecionarPerfil(perfilEscolhido) {
     const botoesAbas = document.querySelectorAll('#perfilTabs button');
@@ -44,50 +51,66 @@ function selecionarPerfil(perfilEscolhido) {
 function realizarLogin(evento) {
     evento.preventDefault();
     const campoEmail = document.getElementById('emailInput');
-    if (!campoEmail || !campoEmail.value.trim()) return;
-    localStorage.setItem('usuarioLogado', campoEmail.value.trim());
+    if (campoEmail && campoEmail.value.trim()) {
+        localStorage.setItem('usuarioLogado', campoEmail.value.trim());
+    }
     window.location.href = 'dashboard.html';
 }
 
 // ==========================================
-// 2. NAVEGAÇÃO ENTRE ABAS (SPA)
+// 2. NAVEGAÇÃO ENTRE ABAS NO DASHBOARD
 // ==========================================
 function navegarPara(abaId) {
     const secoes = ['visao-geral', 'alunos-turmas', 'documentos', 'chamada'];
+    
     secoes.forEach(sec => {
         const elSec = document.getElementById(`sec-${sec}`);
         const elNav = document.getElementById(`nav-${sec}`);
         if (elSec) elSec.classList.add('hidden');
-        if (elNav) elNav.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-left transition-all";
+        if (elNav) {
+            elNav.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-left transition-all";
+        }
     });
 
     const ativaSec = document.getElementById(`sec-${abaId}`);
     const ativaNav = document.getElementById(`nav-${abaId}`);
+    
     if (ativaSec) ativaSec.classList.remove('hidden');
-    if (ativaNav) ativaNav.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 text-left font-semibold transition-all";
+    if (ativaNav) {
+        ativaNav.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl bg-blue-50 text-blue-600 text-left font-semibold transition-all";
+    }
 
-    if (abaId === 'documentos') atualizarPreviewDocumento();
+    // Sempre que abrir a aba de documentos, gera a folha A4 imediatamente
+    if (abaId === 'documentos') {
+        atualizarPreviewDocumento();
+    }
 }
 
 // ==========================================
-// 3. RENDERIZAÇÃO DE TABELAS E FILTROS
+// 3. RENDERIZAÇÃO DE ALUNOS E SELECTS
 // ==========================================
 function renderizarSistema() {
     const alunos = obterAlunos();
-    const termoBusca = (document.getElementById('buscaGlobalInput')?.value || '').toLowerCase();
+    const inputBusca = document.getElementById('buscaGlobalInput');
+    const termoBusca = (inputBusca ? inputBusca.value : '').toLowerCase();
 
-    // Atualiza contador total (base 101 + os cadastrados na lista de demonstração)
+    // Atualiza KPI de total de alunos (101 base + alunos na lista)
     const kpiTotal = document.getElementById('kpiTotalAlunos');
     if (kpiTotal) kpiTotal.innerText = 101 + alunos.length;
 
-    // 1. Tabela Resumo (Visão Geral)
+    // Preenche Tabela Resumo na Visão Geral
     const tbodyResumo = document.getElementById('tabelaResumoAlunos');
     if (tbodyResumo) {
         tbodyResumo.innerHTML = alunos.slice(0, 5).map(a => `
             <tr class="hover:bg-slate-50/80">
-                <td class="py-3 font-medium text-slate-900">${a.nome} <span class="block text-[10px] text-slate-400 font-normal">Matrícula ${a.matricula}</span></td>
+                <td class="py-3 font-medium text-slate-900">
+                    ${a.nome}
+                    <span class="block text-[10px] text-slate-400 font-normal">Matrícula ${a.matricula}</span>
+                </td>
                 <td class="py-3">${a.turma}</td>
-                <td class="py-3"><span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium text-[10px]">${a.status}</span></td>
+                <td class="py-3">
+                    <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium text-[10px]">${a.status}</span>
+                </td>
                 <td class="py-3 text-right space-x-1">
                     <button onclick="abrirDocDireto(${a.id}, 'historico')" class="px-2.5 py-1 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100">Histórico</button>
                     <button onclick="abrirDocDireto(${a.id}, 'escolaridade')" class="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100">Emitir Atestado</button>
@@ -96,7 +119,7 @@ function renderizarSistema() {
         `).join('');
     }
 
-    // 2. Tabela Completa Unificada (Alunos & Turmas)
+    // Preenche Tabela Completa na aba Alunos & Turmas
     const tbodyCompleta = document.getElementById('tabelaCompletaAlunos');
     if (tbodyCompleta) {
         const filtrados = alunos.filter(a => {
@@ -107,7 +130,10 @@ function renderizarSistema() {
 
         tbodyCompleta.innerHTML = filtrados.map(a => `
             <tr class="hover:bg-slate-50/80">
-                <td class="py-3.5 font-semibold text-slate-900">${a.nome} <span class="block text-[10px] text-slate-400 font-normal">Matrícula ${a.matricula}</span></td>
+                <td class="py-3.5 font-semibold text-slate-900">
+                    ${a.nome}
+                    <span class="block text-[10px] text-slate-400 font-normal">Matrícula ${a.matricula}</span>
+                </td>
                 <td class="py-3.5">${a.nascimento}</td>
                 <td class="py-3.5"><span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-medium">${a.turma}</span></td>
                 <td class="py-3.5">${a.responsavel}</td>
@@ -121,14 +147,15 @@ function renderizarSistema() {
         `).join('');
     }
 
-    // 3. Atualiza Selects de Alunos
+    // Preenche os Selects de escolha de aluno (Card Rápido e Aba Documentos)
     const selectRapido = document.getElementById('selectAlunoRapido');
     const selectDoc = document.getElementById('docSelectAluno');
     const opcoesHtml = alunos.map(a => `<option value="${a.id}">${a.nome} (${a.turma})</option>`).join('');
+    
     if (selectRapido) selectRapido.innerHTML = opcoesHtml;
     if (selectDoc) selectDoc.innerHTML = opcoesHtml;
 
-    // 4. Renderiza Lista de Chamada
+    // Preenche a Chamada Diária
     const containerChamada = document.getElementById('listaChamadaContainer');
     if (containerChamada) {
         containerChamada.innerHTML = alunos.map(a => `
@@ -198,12 +225,9 @@ function salvarNovoAluno(event) {
     const turma = document.getElementById('novaTurma').value;
     const responsavel = document.getElementById('novoResponsavel').value.trim();
 
-    const novoId = alunos.length + 1;
-    const novaMatricula = `2026•0${60 + novoId}`;
-
     const novoAluno = {
         id: Date.now(),
-        matricula: novaMatricula,
+        matricula: `2026•0${60 + alunos.length + 1}`,
         nome,
         nascimento,
         turma,
@@ -213,7 +237,7 @@ function salvarNovoAluno(event) {
         frequencia: "100%"
     };
 
-    alunos.unshift(novoAluno); // Coloca no topo da tabela
+    alunos.unshift(novoAluno);
     salvarListaAlunos(alunos);
     fecharModalMatricula();
     document.getElementById('formNovaMatricula').reset();
@@ -222,26 +246,33 @@ function salvarNovoAluno(event) {
 }
 
 // ==========================================
-// 5. EMISSÃO DE DOCUMENTOS (3 MODELOS A4)
+// 5. ABA EMISSÃO DE DOCUMENTOS (GERADOR A4)
 // ==========================================
 function abrirDocDireto(alunoId, tipoDoc) {
     navegarPara('documentos');
-    document.getElementById('docSelectAluno').value = alunoId;
-    document.getElementById('docSelectTipo').value = tipoDoc;
+    const selectAluno = document.getElementById('docSelectAluno');
+    const selectTipo = document.getElementById('docSelectTipo');
+    if (selectAluno) selectAluno.value = alunoId;
+    if (selectTipo) selectTipo.value = tipoDoc;
     atualizarPreviewDocumento();
 }
 
 function atalhoEmitirDoc(tipoDoc) {
-    const alunoId = document.getElementById('selectAlunoRapido').value;
+    const selectRapido = document.getElementById('selectAlunoRapido');
+    const alunoId = selectRapido ? selectRapido.value : obterAlunos()[0].id;
     abrirDocDireto(alunoId, tipoDoc);
 }
 
 function atualizarPreviewDocumento() {
     const alunos = obterAlunos();
-    const alunoId = document.getElementById('docSelectAluno')?.value;
-    const tipo = document.getElementById('docSelectTipo')?.value || 'escolaridade';
+    const selectAluno = document.getElementById('docSelectAluno');
+    const selectTipo = document.getElementById('docSelectTipo');
+
+    const alunoId = selectAluno ? selectAluno.value : alunos[0].id;
+    const tipo = selectTipo ? selectTipo.value : 'escolaridade';
     const aluno = alunos.find(a => String(a.id) === String(alunoId)) || alunos[0];
 
+    // Exibe ou esconde a caixa de Parecer Descritivo dependendo se for Histórico
     const containerParecer = document.getElementById('campoParecerContainer');
     if (containerParecer) {
         if (tipo === 'historico') containerParecer.classList.remove('hidden');
@@ -259,9 +290,9 @@ function atualizarPreviewDocumento() {
         corpoHtml = `
             <p class="leading-relaxed text-sm text-justify mb-6">
                 Atestamos, para os devidos fins de direito, que o(a) aluno(a) <strong>${aluno.nome.toUpperCase()}</strong>, 
-                nascido(a) em <strong>${aluno.nascimento}</strong>, filho(a) ou sob responsabilidade legal de 
+                nascido(a) em <strong>${aluno.nascimento}</strong>, sob responsabilidade legal de 
                 <strong>${aluno.responsavel}</strong>, encontra-se regularmente matriculado(a) e frequentando as aulas 
-                nesta instituição de ensino no ano letivo vigente, cursando a série/turma <strong>${aluno.turma}</strong>, 
+                nesta instituição de ensino no ano letivo de 2026, cursando a série/turma <strong>${aluno.turma}</strong>, 
                 com frequência acumulada de <strong>${aluno.frequencia}</strong> até a presente data.
             </p>
             <p class="leading-relaxed text-sm text-justify">
@@ -275,7 +306,7 @@ function atualizarPreviewDocumento() {
                 Declaramos, para fins de transferência entre instituições de ensino, que o(a) aluno(a) 
                 <strong>${aluno.nome.toUpperCase()}</strong>, nascido(a) em <strong>${aluno.nascimento}</strong>, 
                 sob responsabilidade de <strong>${aluno.responsavel}</strong>, esteve regularmente matriculado(a) 
-                neste Educandário na turma <strong>${aluno.turma}</strong>, solicitando seu desligamento nesta data.
+                neste Educandário na turma <strong>${aluno.turma}</strong>, tendo solicitado seu desligamento nesta data.
             </p>
             <p class="leading-relaxed text-sm text-justify">
                 Informamos que o(a) referido(a) estudante encontra-se apto(a) a prosseguir seus estudos na série correspondente, 
@@ -286,8 +317,8 @@ function atualizarPreviewDocumento() {
         tituloDoc = "HISTÓRICO ESCOLAR E RELATÓRIO DE DESENVOLVIMENTO";
         corpoHtml = `
             <div class="mb-4 text-xs border border-slate-300 rounded-lg p-3 bg-slate-50 space-y-1">
-                <div><strong>ALUNO(A):</strong> ${aluno.nome.toUpperCase()} | <strong>MATRÍCULA:</strong> ${aluno.matricula}</div>
-                <div><strong>DATA DE NASCIMENTO:</strong> ${aluno.nascimento} | <strong>SÉRIE/TURMA ATUAL:</strong> ${aluno.turma}</div>
+                <div><strong>ALUNO(A):</strong> ${aluno.nome.toUpperCase()} &nbsp;|&nbsp; <strong>MATRÍCULA:</strong> ${aluno.matricula}</div>
+                <div><strong>DATA DE NASCIMENTO:</strong> ${aluno.nascimento} &nbsp;|&nbsp; <strong>TURMA ATUAL:</strong> ${aluno.turma}</div>
                 <div><strong>RESPONSÁVEL LEGAL:</strong> ${aluno.responsavel}</div>
             </div>
 
@@ -322,7 +353,7 @@ function atualizarPreviewDocumento() {
     if (folha) {
         folha.innerHTML = `
             <div>
-                <!-- Timbre Oficial -->
+                <!-- Cabeçalho Timbrado Oficial -->
                 <div class="flex items-center space-x-4 border-b-2 border-blue-800 pb-4 mb-8">
                     <img src="logo-maezeferina.jpg" onerror="this.src='logoeducandarioEMZ.jpg'" class="w-16 h-16 object-contain">
                     <div>
@@ -339,7 +370,7 @@ function atualizarPreviewDocumento() {
                 ${corpoHtml}
             </div>
 
-            <!-- Rodapé e Assinatura -->
+            <!-- Assinatura da Diretoria -->
             <div class="mt-12 pt-6 text-center text-xs">
                 <p class="text-right mb-12">Cuiabá - MT, ${dataHoje}.</p>
                 <div class="w-64 mx-auto border-t border-slate-400 pt-2">
@@ -362,7 +393,8 @@ function salvarChamadaSimulada() {
     alert("Chamada diária registrada com sucesso no sistema!");
 }
 
-// Inicializa tudo ao abrir o Dashboard
+// Inicialização imediata ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
     renderizarSistema();
+    atualizarPreviewDocumento();
 });
